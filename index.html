@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Yesterday Left Us — Reader Survey</title>
+<style>
+:root {
+  --paper:#fbf8f2; --card:#fffdf9; --ink:#3f3833;
+  --muted:#82776e; --line:#e8dfd4; --blue:#526a7d;
+  --gold:#d6a84f;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; padding:24px 14px 42px; background:var(--paper);
+  color:var(--ink); font-family:Georgia,"Times New Roman",serif;
+  line-height:1.55;
+}
+.page { max-width:720px; margin:auto; }
+header {
+  text-align:center; padding:38px 20px;
+  border:1px solid var(--line); border-radius:22px;
+  background:var(--card);
+}
+.eyebrow {
+  text-transform:uppercase; letter-spacing:.18em;
+  font: .72rem Arial,sans-serif; color:var(--blue);
+}
+h1 { font-size:clamp(2rem,8vw,3.3rem); font-weight:normal; line-height:1.1; }
+.subtitle { font-style:italic; color:var(--muted); }
+.intro { color:#6e6259; }
+.section-label {
+  margin:26px 4px 10px; color:var(--blue);
+  font: .72rem Arial,sans-serif; letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.question {
+  background:var(--card); border:1px solid var(--line);
+  border-radius:16px; padding:20px 18px; margin:12px 0;
+}
+h2 { font-size:1.05rem; font-weight:normal; margin:0 0 8px; }
+.hint { font: .82rem Arial,sans-serif; color:var(--muted); }
+.stars { display:flex; gap:8px; flex-wrap:wrap; }
+.star {
+  background:none; border:0; padding:3px;
+  font-size:2.5rem; color:#d8d0c5; cursor:pointer;
+}
+.star.active { color:var(--gold); }
+.star:focus-visible { outline:2px solid var(--blue); }
+.rating-label { color:var(--blue); font: .85rem Arial,sans-serif; }
+textarea {
+  width:100%; min-height:105px; padding:12px;
+  border:1px solid #dcd2c6; border-radius:10px;
+  background:#fffefa; font:16px Arial,sans-serif;
+}
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+button.action {
+  border:0; border-radius:25px; padding:13px 18px;
+  font: bold .9rem Arial,sans-serif; cursor:pointer;
+}
+.primary { background:var(--blue); color:white; flex:1; }
+.secondary { background:#edf2f5; color:var(--blue); }
+#status {
+  display:none; margin-top:16px; padding:14px;
+  border-radius:12px; background:#fbf3df;
+  font: .9rem/1.5 Arial,sans-serif;
+}
+footer { text-align:center; color:var(--muted); margin-top:24px; font-style:italic; }
+</style>
+</head>
+<body>
+<main class="page">
+<header>
+  <p class="eyebrow">A reader feedback form</p>
+  <h1>Where Yesterday<br>Left Us</h1>
+  <p class="subtitle">Some moments stay with us. ♡</p>
+  <p>✧ · ✦ · ✧</p>
+  <p class="intro">Thank you for reading our story! Rate your experience below. Your feedback can help us improve this storybook.</p>
+</header>
+
+<form id="survey">
+<p class="section-label">Your ratings</p>
+<div id="ratingQuestions"></div>
+
+<section class="question">
+<h2>What was your favorite part of the story?</h2>
+<p class="hint">Optional</p>
+<textarea id="favorite" placeholder="A scene, line, character, or moment…"></textarea>
+</section>
+
+<section class="question">
+<h2>Do you have any suggestions or comments?</h2>
+<p class="hint">Optional</p>
+<textarea id="comments" placeholder="Share your thoughts…"></textarea>
+</section>
+
+<div class="actions">
+<button class="action primary" type="submit">Finish survey ✦</button>
+<button class="action secondary" type="button" id="reset">Clear answers</button>
+</div>
+<div id="status" role="status"></div>
+</form>
+
+<footer>Thank you for being part of our story. ♡</footer>
+<p class="hint" style="text-align:center">Demo survey: answers are not automatically uploaded online.</p>
+</main>
+
+<script>
+const questions = [
+ {id:"overall", title:"How would you rate the story overall?", labels:["Poor","Fair","Good","Very good","Excellent"]},
+ {id:"characters", title:"How would you rate Azri and Kairo as characters?", labels:["Poor","Fair","Good","Very good","Excellent"]},
+ {id:"creativity", title:"How would you rate the creativity of the story?", labels:["Poor","Fair","Good","Very good","Excellent"]},
+ {id:"emotion", title:"How would you rate the emotional impact?", labels:["Not emotional","Slightly emotional","Moderately emotional","Very emotional","Extremely emotional"]},
+ {id:"readability", title:"How easy was the storybook to read?", labels:["Very difficult","Difficult","Average","Easy","Very easy"]},
+ {id:"recommend", title:"How likely are you to recommend this storybook?", labels:["Very unlikely","Unlikely","Not sure","Likely","Very likely"]}
+];
+const answers = {};
+const container = document.getElementById("ratingQuestions");
+
+questions.forEach((q,i)=>{
+ const section=document.createElement("section");
+ section.className="question";
+ const title=document.createElement("h2");
+ title.textContent=(i+1)+". "+q.title;
+ const hint=document.createElement("p");
+ hint.className="hint";
+ hint.textContent="Tap a star to rate from 1 (lowest) to 5 (highest).";
+ const stars=document.createElement("div");
+ stars.className="stars";
+ stars.setAttribute("role","group");
+ stars.setAttribute("aria-label",q.title);
+ for(let n=1;n<=5;n++){
+  const b=document.createElement("button");
+  b.type="button"; b.className="star"; b.textContent="★";
+  b.setAttribute("aria-label",n+" out of 5 stars");
+  b.addEventListener("click",()=>rate(q.id,n));
+  stars.appendChild(b);
+ }
+ const label=document.createElement("p");
+ label.className="rating-label"; label.id="label-"+q.id;
+ label.textContent="No rating selected";
+ section.append(title,hint,stars,label);
+ container.appendChild(section);
+});
+
+function rate(id,n){
+ answers[id]=n;
+ const q=questions.find(item=>item.id===id);
+ const section=[...container.children].find(el=>el.querySelector("#label-"+id));
+ [...section.querySelectorAll(".star")].forEach((b,i)=>{
+  b.classList.toggle("active",i<n);
+  b.setAttribute("aria-pressed",String(i+1===n));
+ });
+ document.getElementById("label-"+id).textContent=n+"/5 — "+q.labels[n-1];
+}
+
+document.getElementById("survey").addEventListener("submit",e=>{
+ e.preventDefault();
+ const missing=questions.filter(q=>!answers[q.id]);
+ const status=document.getElementById("status");
+ status.style.display="block";
+ if(missing.length){
+  status.textContent="Please rate all six questions before finishing. Still needed: "+missing.map(q=>q.title).join(" ");
+  return;
+ }
+ const lines=["WHERE YESTERDAY LEFT US — READER FEEDBACK"];
+ questions.forEach(q=>{
+  const n=answers[q.id];
+  lines.push(q.title+" "+ "★".repeat(n)+"☆".repeat(5-n)+" ("+n+"/5 — "+q.labels[n-1]+")");
+ });
+ lines.push("Favorite part: "+(document.getElementById("favorite").value.trim()||"(not provided)"));
+ lines.push("Comments: "+(document.getElementById("comments").value.trim()||"(not provided)"));
+ status.replaceChildren();
+ const thanks=document.createElement("p");
+ thanks.textContent="Thank you! Your survey is complete. Copy your answers below if you want to save or share them.";
+ const output=document.createElement("textarea");
+ output.readOnly=true; output.value=lines.join("\n");
+ const copy=document.createElement("button");
+ copy.type="button"; copy.className="action secondary";
+ copy.textContent="Copy my answers";
+ copy.addEventListener("click",async()=>{
+  try { await navigator.clipboard.writeText(output.value); copy.textContent="Copied!"; }
+  catch { output.focus(); output.select(); copy.textContent="Select and copy the text above"; }
+ });
+ status.append(thanks,output,copy);
+});
+
+document.getElementById("reset").addEventListener("click",()=>{
+ Object.keys(answers).forEach(k=>delete answers[k]);
+ document.querySelectorAll(".star").forEach(b=>{
+  b.classList.remove("active"); b.setAttribute("aria-pressed","false");
+ });
+ questions.forEach(q=>document.getElementById("label-"+q.id).textContent="No rating selected");
+ document.getElementById("favorite").value="";
+ document.getElementById("comments").value="";
+ const status=document.getElementById("status");
+ status.style.display="none"; status.replaceChildren();
+});
+</script>
+</body>
+</html>
